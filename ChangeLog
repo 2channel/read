@@ -1,0 +1,163 @@
+tag: HEAD
+
+  RAWOUT_MULTIを実装。
+  REFERDRES_SIMPLE時にbaseヘッダが出力されないため、simpleな表示が旧形式で行われたときに
+そこからの >>n リンクの基準がおかしくなっていたbug fix.
+  GetString()が引数をクリアしないように修正。
+  通常モード時、カンマで区切ることで複数レスを表示できるようにした。ただし連続していない
+範囲は先頭から20個までのみ認識する。
+    例) read.cgi/board/9999999999/1-3,5,7,20,900-i
+  rawモードでは上下限のみ認識する。(上の例だと全レスということになる)
+
+
+tag: YAKIN20011021: 実験サーバ choco.2ch.net および piza, teri2 にて ver 5.26として採用。
+(chocoはmod_gzipがないため、CHECK_MOD_GZIPをoffにして導入
+mod_gzipがあるサーバはCHECK_MOD_GZIPをon)
+
+  IEで問題が出たため、文字コードE0hの文字をSJIS1バイト目と判定するようにした。
+  geturltaillenでのURL終端判定に &gt; と &lt; を追加した
+  1の本文に>>数字 でない<a href>リンクが本文中に含まれていた場合にタイトルがおかくなっていたバグ修正
+  10桁datの倉庫検索パス変更 "1aaabccccc" -> "1aaa/1aaab"
+
+
+tag: YAKIN20011012: 実験サーバ choco.2ch.net にて ver 5.25として採用。
+
+  out_simplehtml()でHEADER_0を出していなかった
+  can_simplehtml()でREFERERが旧形式の時にbbsを取りそこなっていた
+  datファイルが見つからないときはLastModifiedを出さないように修正
+
+  追加condition:
+    ▲AUTO_KAKO 過去ログに対して透過的にアクセスする
+      AUTO_KAKO_MODE AUTO_KAKOの動作制限設定
+    ▲AUTO_LOGTYPE datファイルを見てログのフォーマットを自動判別する
+  mmapのMAP_SHARED使用によると思われる例外について、
+  未定義な振る舞いに依存した暫定対処を行った(これで駄目ならMAP_SHAREDをあきらめるべき)。
+  AUTO_KAKO関係、AUTO_LOGTYPE関係とその周辺を少し変えた。
+  rawmode時はget_title()等を呼ばないようにした。
+  subject.txt取得時と!busytime時はMAP_PRIVATEにした。
+  追加condition:
+    △RAWOUT_PARTIAL raw=0.0時のみst,to,lsを使用した部分取得を可能にする
+      (subject.txt取得時のみ、ls=??はto=??として扱う)
+    △Katjusha_DLL_REPLY かちゅ～しゃgzip対応DLLのリクエストに応答する
+  PATH形式の末尾に'/'が含まれるとき、BASE_DEFINEを出力するようにした
+  rawモードでファイルサイズジャストの時にも
+  Last-ModifiedとContent-Lengthを出すようにした。
+  raw=.nnn形式のUAチェックを外した。
+  追加condition:
+    △WRITESTOP_FILESIZE 「大きすぎます」が近付いた時スレッドストップ扱いする
+  削除condition:
+    USE_PATH
+    ALWAYS_PATH
+    bbs.cgiの採用により、ON固定
+  index.htmに戻らないようにした
+  User-Agentを見て携帯と判定したら自動的に初期値としてimode=trueと見なすようにした。
+  1001レスオーバーのdatがあってもそこでファイルが終了したものと見なすようにした。
+  imode時のリンク削除を、全削除からbusytimeの仕様に変えた。
+  /read.cgi/board/999999999 でも動くようにした。
+  CHECK_MOD_GZIP時にmod_gzipを見つけたら、圧縮をmod_gzipに任せるようにした。
+  過去ログをKAKOから探す時、.dat.gzも探すようにした(rawmodeのみ)。
+
+
+tag: YAKIN20010925: 実験サーバ choco.2ch.net にて ver 5.24として採用。
+
+  imodeでPREV_NEXT_ANCHOR機能追加
+  ENGLISH condition 追加
+  CONFIG_TIMEZONE 追加("JST-9")
+  USE_INTERNAL_SETTINGS
+    設定にSETTINGファイルではなく、SPECIAL_SETTINGを利用する
+  過去ログがkako/100/に入っている場合に対応
+  gzip転送によるトラフィック削減を狙い、/boardname/?raw=0.0 でsubject.txtの転送ができるようにした
+  1を含む時にnを出さないように
+  単点簡易表示のREFERERチェックが無効になっていた
+
+
+tag: YAKIN20010922: 実験サーバ choco.2ch.net にて ver 5.23として採用。
+
+　dat落ちのメッセージ変更
+　USE_PATH時のimode出力対応
+  USE_INDEX用処理の一部が#if 0になっていたので#ifdef USE_INDEXに訂正。
+  rawmodeリザルトで "-ERR 過去ログ倉庫で発見 %s" と "-ERR html待ち" 追加。
+　rawmodeで末尾にhtmlが付いてしまうバグ修正
+  USE_PATHのURL生成をまとめ、旧形式と統合した。
+    CHUNKED_ANCHOR_WITH_FORMのみ未対応
+  出力系のconditionのチェック
+    RELOADLINK,PREV_NEXT_ANCHOR,CHUNK_ANCHOR,CREATE_NAME_ANCHOR
+    SEPARATE_ANCHORのon/offで不都合を修正
+    SEPARATE_CHUNK_ANCHORとPREV_NEXT_ANCHOR同時はいまいち
+  path形式でのlxxでnofirst=trueにしていたのをやめた。
+  path形式と旧形式でnofirst=の不整合を修正
+  LATEST_ANCHORのcondition削除
+　ALWAYS_PATH condition追加
+　PREV_NEXT_ANCHOR有効時はi-mode版もリンクを「1-」「最新10」「次10」のように簡略化
+　i-mode版で不要な</dl>が出力されるバグを修正
+　PATH時に過去落ち/過去ログ倉庫へのリンクがおかしかったバグを修正
+　rawmode +リザルトでデータサイズに続けて "/上限サイズK"も出力するようにした
+　>>nnリンクを削除する場合に余分な"</a>"が残ってしまっていたバグ修正
+  READ_KAKO read.cgi/kako/nnnn/で過去ログ読み出し
+  READ_TEMP READ_KAKOに加えてread.cgi/temp/nnnn/で過去ログ読み出し
+    ■■■転送量の増加に注意、現在OFF
+  READ_KAKO_THROUGH 過去ログに誘導するときに範囲指定を継承する
+　CUT_TAIL_BLANK 行末空白の削除
+　STRICT_ILLEGAL_CHECK SJIS1バイト目で終わる行は空白を追加
+
+
+tag: YAKIN20010919: 実験サーバ choco.2ch.net にて ver 5.22として採用。
+
+　rawmodeで "+OK"と"-INCR"にサイズも表示するようにした
+　フッタ部分にまたがるHTMLタグの修正
+　HEADリクエスト時に処理軽減
+　PREV_NEXT_ANCHORをCHUNK_ANCHORとRELOADLINKに協調させた
+　REFERDRES_SIMPLE, NO_LINK_URL_BUSY追加
+　USE_CSS追加、fusianasan等の対応待ち
+　「名前」も削除(CUT_NAME_STRING)
+　PUT_ETAG追加
+　他レスへのリンク指定 &gt;&gt; を >> に短縮置換
+　他レスへのリンクが PATH_INFO時常に範囲指定になっていたのを整理
+　PATH_INFOの=をlに。
+　ETag生成時、dat_read()が二回呼ばれることがあったが、1回のみにするようにした。
+
+
+tag YAKIN20010915: 実験サーバ ex.2ch.net にて ver 5.21として採用。
+
+　USE_PATH時、スレ一覧を行う実験機能の残骸が残っていた(～/board/ とリクエストしたときに
+壊れた表示になった)が、無効にして「ないです」エラーになるようにした
+　rawmode時はBadAccess()の判定を変更、圧縮対応のみ許可とした。
+　サイズ上限とメッセージ数上限の両方に達しているときの警告は無駄なので消した
+　i-mode時の最終レス画面でRELOADLINKではなく「次の10レス」が出てしまっていたバグ修正
+　NN4.xのgzip圧縮時対策
+　PATH_INFO中に '='でls, 'n'でnofirst=true, '.'でnofirst=false相当の動作をするようにした
+　PATH_INFOとQUERY_STRINGが両方指定された場合、後者が優先になるようにした
+　rawmodeの書式ミスには-INCRを返すようにした。
+　>>nnで表示外に飛ぶとき、target="_blank"を付けた
+　USE_CHUNK_LINK, SEPARATE_CHUNK_ANCHOR, PREV_NEXT_ANCHOR, NORMAL_TAGCUT追加
+　夜勤さんの要請に従い、DAT_DIR, TEMP_DIR, KAKO_DIR追加。過去ログのディレクトリ構成変更に
+対応。
+　「掲示板に戻る」リンクを相対パス化
+　rawmodeでの出力をバイナリ出力に修正。従来は'\0'があると切れていた。
+　lsと範囲指定の両方があったときにはlsが優先になるようにした。
+
+
+tag YAKIN20010910: piza2サーバなどに Ver 5.20として採用。
+
+  CGINAMEの参照もれ対応
+　USE_PATH時のrewrite_href生成URLをリクエストされた方式に合わせた
+　nofirst=true表記統一
+　CUTRESLINKを有効固定にした
+　旧形式リクエストの場合 >>1 が表示できなかった
+　サイズ制限による「大きすぎます」警告追加
+　ストッパー時、1000オーバー時にRELOADLINKを消した
+　BadAccess判定のかちゅ～しゃのスペルミス訂正
+　その他細かいbug fix, ソース整理
+　config.txt追加
+
+
+tag YAKIN20010909: piza2サーバに read5x.cgiとして実験導入
+
+　ver.5.12に対して多数の改良。おおまかに
+　・CHUNK対応
+　・gzip対応
+　・"投稿日"の削除
+　・PATH_INFOへの対応
+　・rawモードの導入
+など
+
